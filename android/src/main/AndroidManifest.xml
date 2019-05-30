@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.flutter.plugins.webviewflutter">
+  <!-- <application>
+    <meta-data android:name="Mob-AppKey" android:value="2b4614f26695a" />
+    <meta-data android:name="Mob-AppSecret" android:value="ec172839cc173cad0e57b5552d74ff53" />
+  </application> -->
+</manifest>
