@@ -18,7 +18,6 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.platform.PlatformView;
-import cn.sharesdk.js.ShareSDKUtils;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -202,10 +201,6 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
               flutterWebViewClient.createWebViewClient(hasNavigationDelegate);
 
           webView.setWebViewClient(webViewClient);
-
-          // ShareSDK支持
-          ShareSDKUtils.prepare(this.webView, webViewClient);
-
           break;
         case "debuggingEnabled":
           final boolean debuggingEnabled = (boolean) settings.get(key);

@@ -13,22 +13,15 @@ gradle.buildFinished { buildResult ->
 
 group 'io.flutter.plugins.webviewflutter'
 version '1.0-SNAPSHOT'
-apply plugin: 'com.android.library'
-apply from: 'MobSDK.gradle'
 
 buildscript {
     repositories {
         google()
         jcenter()
-        maven {
-            url "http://mvn.mob.com/android"
-        }
     }
 
     dependencies {
         classpath 'com.android.tools.build:gradle:3.3.0'
-
-        classpath 'com.mob.sdk:MobSDK:+'
     }
 }
 
@@ -36,17 +29,16 @@ rootProject.allprojects {
     repositories {
         google()
         jcenter()
-        maven {
-            url "http://mvn.mob.com/android"
-        }
     }
 }
+
+apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 28
 
     defaultConfig {
-        minSdkVersion 18
+        minSdkVersion 16
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     lintOptions {

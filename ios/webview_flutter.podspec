@@ -15,18 +15,6 @@ A WebView Plugin for Flutter.
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
-  s.dependency 'mob_sharesdk'
-
-  s.dependency 'mob_sharesdk' 
-  s.dependency 'mob_sharesdk/ShareSDKUI'
-  s.dependency 'mob_sharesdk/ShareSDKPlatforms/WeChatFull'
-  s.dependency 'mob_sharesdk/ShareSDKConfigFile'
-  s.dependency 'mob_sharesdk/ShareSDKExtension'
-
-
-  s.vendored_frameworks = 'SDK/*.framework'
-  s.frameworks = "JavaScriptCore"
-  s.libraries = "z","stdc++","icucore","sqlite3"
   
   s.ios.deployment_target = '8.0'
 end

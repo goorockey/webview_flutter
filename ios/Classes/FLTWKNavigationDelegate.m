@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #import "FLTWKNavigationDelegate.h"
-#import "ShareSDK/ShareSDKHandler.h"
 
 @implementation FLTWKNavigationDelegate {
   FlutterMethodChannel* _methodChannel;
@@ -20,12 +19,6 @@
 - (void)webView:(WKWebView*)webView
     decidePolicyForNavigationAction:(WKNavigationAction*)navigationAction
                     decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
-  if ([[ShareSDKHandler sharedHandler] captureRequest:navigationAction webView:webView]) {
-    decisionHandler(WKNavigationActionPolicyCancel);
-    return;
-  }
-
-
   if (!self.hasDartNavigationDelegate) {
     decisionHandler(WKNavigationActionPolicyAllow);
     return;
