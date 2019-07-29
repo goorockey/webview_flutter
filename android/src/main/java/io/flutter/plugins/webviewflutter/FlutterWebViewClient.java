@@ -15,6 +15,7 @@ import androidx.webkit.WebViewClientCompat;
 import io.flutter.plugin.common.MethodChannel;
 import java.util.HashMap;
 import java.util.Map;
+import com.tencent.stat.hybrid.StatHybridHandler;
 
 // We need to use WebViewClientCompat to get
 // shouldOverrideUrlLoading(WebView view, WebResourceRequest request)
@@ -31,6 +32,10 @@ class FlutterWebViewClient {
 
   @TargetApi(Build.VERSION_CODES.LOLLIPOP)
   private boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+    if (StatHybridHandler.handleWebViewUrl(view, request.getUrl().toString())) {
+      return true;
+    }
+
     if (!hasNavigationDelegate) {
       return false;
     }
@@ -57,6 +62,10 @@ class FlutterWebViewClient {
   }
 
   private boolean shouldOverrideUrlLoading(WebView view, String url) {
+    if (StatHybridHandler.handleWebViewUrl(view, url)) {
+      return true;
+    }
+
     if (!hasNavigationDelegate) {
       return false;
     }

@@ -14,7 +14,10 @@ A WebView Plugin for Flutter.
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
+  
   s.dependency 'Flutter'
+  s.dependency 'QQ_MTA'
+  s.dependency 'QQ_MTA/Hybrid'
   
   s.ios.deployment_target = '8.0'
 end

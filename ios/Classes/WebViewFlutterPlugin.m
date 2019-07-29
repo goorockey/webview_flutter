@@ -1,6 +1,7 @@
 #import "WebViewFlutterPlugin.h"
 #import "FLTCookieManager.h"
 #import "FlutterWebView.h"
+#import "MTAConfig.h"
 
 @implementation FLTWebViewFlutterPlugin
 

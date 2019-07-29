@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #import "FLTWKNavigationDelegate.h"
+#import "MTAHybrid.h"
 
 @implementation FLTWKNavigationDelegate {
   FlutterMethodChannel* _methodChannel;
@@ -19,6 +20,13 @@
 - (void)webView:(WKWebView*)webView
     decidePolicyForNavigationAction:(WKNavigationAction*)navigationAction
                     decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+  // 处理MTA混合统计请求的代码
+  if ([MTAHybrid handleAction:navigationAction
+      fromWKWebView:webView]) {
+      decisionHandler(WKNavigationActionPolicyCancel);
+      return;
+  }
+
   if (!self.hasDartNavigationDelegate) {
     decisionHandler(WKNavigationActionPolicyAllow);
     return;

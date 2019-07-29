@@ -21,6 +21,7 @@ import io.flutter.plugin.platform.PlatformView;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import com.tencent.stat.hybrid.StatHybridHandler;
 
 public class FlutterWebView implements PlatformView, MethodCallHandler {
   private static final String JS_CHANNEL_NAMES_FIELD = "javascriptChannelNames";
@@ -197,6 +198,7 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
 
         final WebViewClient webViewClient = flutterWebViewClient.createWebViewClient(hasNavigationDelegate);
 
+        StatHybridHandler.initWebSettings(webView.getSettings());
         webView.setWebViewClient(webViewClient);
         break;
       case "debuggingEnabled":

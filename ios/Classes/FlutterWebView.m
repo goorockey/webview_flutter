@@ -5,6 +5,7 @@
 #import "FlutterWebView.h"
 #import "FLTWKNavigationDelegate.h"
 #import "JavaScriptChannelHandler.h"
+#import "MTAHybrid.h"
 
 @implementation FLTWebViewFactory {
   NSObject<FlutterBinaryMessenger>* _messenger;
@@ -82,6 +83,12 @@
   }
   return self;
 }
+
+
+-(void)dealloc{
+	[MTAHybrid stopWKWebView:_webView];
+}
+
 
 - (UIView*)view {
   return _webView;
