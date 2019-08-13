@@ -7,6 +7,7 @@ package io.flutter.plugins.webviewflutter;
 import android.annotation.TargetApi;
 import android.os.Build;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -39,25 +40,19 @@ class FlutterWebViewClient {
     if (!hasNavigationDelegate) {
       return false;
     }
-    notifyOnNavigationRequest(request.getUrl().toString(), request.getRequestHeaders(), view, request.isForMainFrame());
-    // We must make a synchronous decision here whether to allow the navigation or
-    // not,
-    // if the Dart code has set a navigation delegate we want that delegate to
-    // decide whether
-    // to navigate or not, and as we cannot get a response from the Dart delegate
-    // synchronously we
-    // return true here to block the navigation, if the Dart delegate decides to
-    // allow the
+    notifyOnNavigationRequest(
+        request.getUrl().toString(), request.getRequestHeaders(), view, request.isForMainFrame());
+    // We must make a synchronous decision here whether to allow the navigation or not,
+    // if the Dart code has set a navigation delegate we want that delegate to decide whether
+    // to navigate or not, and as we cannot get a response from the Dart delegate synchronously we
+    // return true here to block the navigation, if the Dart delegate decides to allow the
     // navigation the plugin will later make an addition loadUrl call for this url.
     //
-    // Since we cannot call loadUrl for a subframe, we currently only allow the
-    // delegate to stop
-    // navigations that target the main frame, if the request is not for the main
-    // frame
+    // Since we cannot call loadUrl for a subframe, we currently only allow the delegate to stop
+    // navigations that target the main frame, if the request is not for the main frame
     // we just return false to allow the navigation.
     //
-    // For more details see:
-    // https://github.com/flutter/flutter/issues/25329#issuecomment-464863209
+    // For more details see: https://github.com/flutter/flutter/issues/25329#issuecomment-464863209
     return request.isForMainFrame();
   }
 
@@ -69,16 +64,13 @@ class FlutterWebViewClient {
     if (!hasNavigationDelegate) {
       return false;
     }
-    // This version of shouldOverrideUrlLoading is only invoked by the webview on
-    // devices with
-    // webview versions earlier than 67(it is also invoked when
-    // hasNavigationDelegate is false).
-    // On these devices we cannot tell whether the navigation is targeted to the
-    // main frame or not.
-    // We proceed assuming that the navigation is targeted to the main frame. If the
-    // page had any
+    // This version of shouldOverrideUrlLoading is only invoked by the webview on devices with
+    // webview versions  earlier than 67(it is also invoked when hasNavigationDelegate is false).
+    // On these devices we cannot tell whether the navigation is targeted to the main frame or not.
+    // We proceed assuming that the navigation is targeted to the main frame. If the page had any
     // frames they will be loaded in the main frame instead.
-    Log.w(TAG,
+    Log.w(
+        TAG,
         "Using a navigationDelegate with an old webview implementation, pages with frames or iframes will not work");
     notifyOnNavigationRequest(url, null, view, true);
     return true;
@@ -90,13 +82,14 @@ class FlutterWebViewClient {
     methodChannel.invokeMethod("onPageFinished", args);
   }
 
-  private void notifyOnNavigationRequest(String url, Map<String, String> headers, WebView webview,
-      boolean isMainFrame) {
+  private void notifyOnNavigationRequest(
+      String url, Map<String, String> headers, WebView webview, boolean isMainFrame) {
     HashMap<String, Object> args = new HashMap<>();
     args.put("url", url);
     args.put("isForMainFrame", isMainFrame);
     if (isMainFrame) {
-      methodChannel.invokeMethod("navigationRequest", args, new OnNavigationRequestResult(url, headers, webview));
+      methodChannel.invokeMethod(
+          "navigationRequest", args, new OnNavigationRequestResult(url, headers, webview));
     } else {
       methodChannel.invokeMethod("navigationRequest", args);
     }
@@ -124,13 +117,15 @@ class FlutterWebViewClient {
       }
 
       @Override
-      public boolean shouldOverrideUrlLoading(WebView view, String url) {
-        return FlutterWebViewClient.this.shouldOverrideUrlLoading(view, url);
+      public void onPageFinished(WebView view, String url) {
+        FlutterWebViewClient.this.onPageFinished(view, url);
       }
 
       @Override
-      public void onPageFinished(WebView view, String url) {
-        FlutterWebViewClient.this.onPageFinished(view, url);
+      public void onUnhandledKeyEvent(WebView view, KeyEvent event) {
+        // Deliberately empty. Occasionally the webview will mark events as having failed to be
+        // handled even though they were handled. We don't want to propagate those as they're not
+        // truly lost.
       }
     };
   }
@@ -138,7 +133,8 @@ class FlutterWebViewClient {
   private WebViewClientCompat internalCreateWebViewClientCompat() {
     return new WebViewClientCompat() {
       @Override
-      public boolean shouldOverrideUrlLoading(@NonNull WebView view, @NonNull WebResourceRequest request) {
+      public boolean shouldOverrideUrlLoading(
+          @NonNull WebView view, @NonNull WebResourceRequest request) {
         return FlutterWebViewClient.this.shouldOverrideUrlLoading(view, request);
       }
 
@@ -150,6 +146,13 @@ class FlutterWebViewClient {
       @Override
       public void onPageFinished(WebView view, String url) {
         FlutterWebViewClient.this.onPageFinished(view, url);
+      }
+
+      @Override
+      public void onUnhandledKeyEvent(WebView view, KeyEvent event) {
+        // Deliberately empty. Occasionally the webview will mark events as having failed to be
+        // handled even though they were handled. We don't want to propagate those as they're not
+        // truly lost.
       }
     };
   }
@@ -180,7 +183,8 @@ class FlutterWebViewClient {
 
     @Override
     public void notImplemented() {
-      throw new IllegalStateException("navigationRequest must be implemented by the webview method channel");
+      throw new IllegalStateException(
+          "navigationRequest must be implemented by the webview method channel");
     }
 
     private void loadUrl() {

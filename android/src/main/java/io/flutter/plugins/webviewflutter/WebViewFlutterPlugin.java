@@ -9,11 +9,13 @@ import com.tencent.stat.hybrid.StatHybridHandler;
 
 /** WebViewFlutterPlugin */
 public class WebViewFlutterPlugin {
-
   /** Plugin registration. */
   public static void registerWith(Registrar registrar) {
-    registrar.platformViewRegistry().registerViewFactory("plugins.flutter.io/webview",
-        new WebViewFactory(registrar.messenger()));
+    registrar
+        .platformViewRegistry()
+        .registerViewFactory(
+            "plugins.flutter.io/webview",
+            new WebViewFactory(registrar.messenger(), registrar.view()));
     FlutterCookieManager.registerWith(registrar.messenger());
 
     // 使用默认Appkey初始化Hybrid模块
