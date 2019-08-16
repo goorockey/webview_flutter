@@ -280,5 +280,6 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
   public void dispose() {
     methodChannel.setMethodCallHandler(null);
     webView.dispose();
+    webView.destroy();
   }
 }
