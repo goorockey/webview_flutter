@@ -83,12 +83,14 @@ enum AutoMediaPlaybackPolicy {
   /// For example: JavaScript code cannot start playing media unless the code was executed
   /// as a result of a user action (like a touch event).
   require_user_action_for_all_media_types,
+
   /// Starting any kind of media playback is always allowed.
   ///
   /// For example: JavaScript code that's triggered when the page is loaded can start playing
   /// video or audio.
   always_allow,
 }
+
 final RegExp _validChannelNames = RegExp('^[a-zA-Z_][a-zA-Z0-9]*\$');
 
 /// A named channel for receiving messaged from JavaScript code running inside a web view.
@@ -138,6 +140,7 @@ class WebView extends StatefulWidget {
     this.gestureRecognizers,
     this.onPageFinished,
     this.debuggingEnabled = false,
+    this.userAgent,
     this.initialMediaPlaybackPolicy =
         AutoMediaPlaybackPolicy.require_user_action_for_all_media_types,
   })  : assert(javascriptMode != null),
@@ -275,6 +278,20 @@ class WebView extends StatefulWidget {
   /// By default `debuggingEnabled` is false.
   final bool debuggingEnabled;
 
+  /// The value used for the HTTP User-Agent: request header.
+  ///
+  /// When null the platform's webview default is used for the User-Agent header.
+  ///
+  /// When the [WebView] is rebuilt with a different `userAgent`, the page reloads and the request uses the new User Agent.
+  ///
+  /// When [WebViewController.goBack] is called after changing `userAgent` the previous `userAgent` value is used until the page is reloaded.
+  ///
+  /// This field is ignored on iOS versions prior to 9 as the platform does not support a custom
+  /// user agent.
+  ///
+  /// By default `userAgent` is null.
+  final String userAgent;
+
   /// Which restrictions apply on automatic media playback.
   ///
   /// This initial value is applied to the platform's webview upon creation. Any following
@@ -282,6 +299,7 @@ class WebView extends StatefulWidget {
   ///
   /// The default policy is [AutoMediaPlaybackPolicy.require_user_action_for_all_media_types].
   final AutoMediaPlaybackPolicy initialMediaPlaybackPolicy;
+
   @override
   State<StatefulWidget> createState() => _WebViewState();
 }
@@ -291,6 +309,7 @@ class _WebViewState extends State<WebView> {
       Completer<WebViewController>();
 
   _PlatformCallbacksHandler _platformCallbacksHandler;
+
   @override
   Widget build(BuildContext context) {
     return WebView.platform.build(
@@ -343,6 +362,7 @@ CreationParams _creationParamsfromWidget(WebView widget) {
     initialUrl: widget.initialUrl,
     webSettings: _webSettingsFromWidget(widget),
     javascriptChannelNames: _extractChannelNames(widget.javascriptChannels),
+    userAgent: widget.userAgent,
     autoMediaPlaybackPolicy: widget.initialMediaPlaybackPolicy,
   );
 }
@@ -352,6 +372,7 @@ WebSettings _webSettingsFromWidget(WebView widget) {
     javascriptMode: widget.javascriptMode,
     hasNavigationDelegate: widget.navigationDelegate != null,
     debuggingEnabled: widget.debuggingEnabled,
+    userAgent: WebSetting<String>.of(widget.userAgent),
   );
 }
 
@@ -361,12 +382,16 @@ WebSettings _clearUnchangedWebSettings(
   assert(currentValue.javascriptMode != null);
   assert(currentValue.hasNavigationDelegate != null);
   assert(currentValue.debuggingEnabled != null);
+  assert(currentValue.userAgent.isPresent);
   assert(newValue.javascriptMode != null);
   assert(newValue.hasNavigationDelegate != null);
   assert(newValue.debuggingEnabled != null);
+  assert(newValue.userAgent.isPresent);
+
   JavascriptMode javascriptMode;
   bool hasNavigationDelegate;
   bool debuggingEnabled;
+  WebSetting<String> userAgent = WebSetting<String>.absent();
   if (currentValue.javascriptMode != newValue.javascriptMode) {
     javascriptMode = newValue.javascriptMode;
   }
@@ -376,11 +401,15 @@ WebSettings _clearUnchangedWebSettings(
   if (currentValue.debuggingEnabled != newValue.debuggingEnabled) {
     debuggingEnabled = newValue.debuggingEnabled;
   }
+  if (currentValue.userAgent != newValue.userAgent) {
+    userAgent = newValue.userAgent;
+  }
 
   return WebSettings(
-      javascriptMode: javascriptMode,
-      hasNavigationDelegate: hasNavigationDelegate,
+    javascriptMode: javascriptMode,
+    hasNavigationDelegate: hasNavigationDelegate,
     debuggingEnabled: debuggingEnabled,
+    userAgent: userAgent,
   );
 }
 
@@ -398,9 +427,6 @@ class _PlatformCallbacksHandler implements WebViewPlatformCallbacksHandler {
     _updateJavascriptChannelsFromSet(_widget.javascriptChannels);
   }
 
-
-
-
   WebView _widget;
 
   // Maps a channel name to a channel.
@@ -416,16 +442,16 @@ class _PlatformCallbacksHandler implements WebViewPlatformCallbacksHandler {
   bool onNavigationRequest({String url, bool isForMainFrame}) {
     final NavigationRequest request =
         NavigationRequest._(url: url, isForMainFrame: isForMainFrame);
-        final bool allowNavigation = _widget.navigationDelegate == null ||
-            _widget.navigationDelegate(request) == NavigationDecision.navigate;
-        return allowNavigation;
+    final bool allowNavigation = _widget.navigationDelegate == null ||
+        _widget.navigationDelegate(request) == NavigationDecision.navigate;
+    return allowNavigation;
   }
 
   @override
   void onPageFinished(String url) {
-        if (_widget.onPageFinished != null) {
+    if (_widget.onPageFinished != null) {
       _widget.onPageFinished(url);
-        }
+    }
   }
 
   void _updateJavascriptChannelsFromSet(Set<JavascriptChannel> channels) {
@@ -451,9 +477,13 @@ class WebViewController {
   ) : assert(_webViewPlatformController != null) {
     _settings = _webSettingsFromWidget(_widget);
   }
+
   final WebViewPlatformController _webViewPlatformController;
+
   final _PlatformCallbacksHandler _platformCallbacksHandler;
+
   WebSettings _settings;
+
   WebView _widget;
 
   /// Loads the specified URL.
@@ -563,7 +593,6 @@ class WebViewController {
       _webViewPlatformController.addJavascriptChannels(channelsToAdd);
     }
     _platformCallbacksHandler._updateJavascriptChannelsFromSet(newChannels);
-
   }
 
   /// Evaluates a JavaScript expression in the context of the current page.

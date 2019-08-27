@@ -22,6 +22,7 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
 
   static const MethodChannel _cookieManagerChannel =
       MethodChannel('plugins.flutter.io/cookie_manager');
+
   Future<bool> _onMethodCall(MethodCall call) async {
     switch (call.method) {
       case 'javascriptChannelMessage':
@@ -41,6 +42,7 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
     throw MissingPluginException(
         '${call.method} was invoked but has no handler');
   }
+
   @override
   Future<void> loadUrl(
     String url,
@@ -55,18 +57,25 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
 
   @override
   Future<String> currentUrl() => _channel.invokeMethod<String>('currentUrl');
+
   @override
   Future<bool> canGoBack() => _channel.invokeMethod<bool>("canGoBack");
+
   @override
   Future<bool> canGoForward() => _channel.invokeMethod<bool>("canGoForward");
+
   @override
   Future<void> goBack() => _channel.invokeMethod<void>("goBack");
+
   @override
   Future<void> goForward() => _channel.invokeMethod<void>("goForward");
+
   @override
   Future<void> reload() => _channel.invokeMethod<void>("reload");
+
   @override
   Future<void> clearCache() => _channel.invokeMethod<void>("clearCache");
+
   @override
   Future<void> updateSettings(WebSettings settings) {
     final Map<String, dynamic> updatesMap = _webSettingsToMap(settings);
@@ -75,21 +84,25 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
     }
     return _channel.invokeMethod<void>('updateSettings', updatesMap);
   }
+
   @override
   Future<String> evaluateJavascript(String javascriptString) {
     return _channel.invokeMethod<String>(
         'evaluateJavascript', javascriptString);
   }
+
   @override
   Future<void> addJavascriptChannels(Set<String> javascriptChannelNames) {
     return _channel.invokeMethod<void>(
         'addJavascriptChannels', javascriptChannelNames.toList());
   }
+
   @override
   Future<void> removeJavascriptChannels(Set<String> javascriptChannelNames) {
     return _channel.invokeMethod<void>(
         'removeJavascriptChannels', javascriptChannelNames.toList());
   }
+
   /// Method channel implementation for [WebViewPlatform.clearCookies].
   static Future<bool> clearCookies() {
     return _cookieManagerChannel
@@ -106,9 +119,17 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
       map[key] = value;
     }
 
+    void _addSettingIfPresent<T>(String key, WebSetting<T> setting) {
+      if (!setting.isPresent) {
+        return;
+      }
+      map[key] = setting.value;
+    }
+
     _addIfNonNull('jsMode', settings.javascriptMode?.index);
     _addIfNonNull('hasNavigationDelegate', settings.hasNavigationDelegate);
     _addIfNonNull('debuggingEnabled', settings.debuggingEnabled);
+    _addSettingIfPresent('userAgent', settings.userAgent);
     return map;
   }
 
@@ -122,8 +143,8 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
       'initialUrl': creationParams.initialUrl,
       'settings': _webSettingsToMap(creationParams.webSettings),
       'javascriptChannelNames': creationParams.javascriptChannelNames.toList(),
+      'userAgent': creationParams.userAgent,
       'autoMediaPlaybackPolicy': creationParams.autoMediaPlaybackPolicy.index,
     };
   }
-
 }

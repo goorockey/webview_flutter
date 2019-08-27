@@ -17,17 +17,26 @@ import 'webview_flutter.dart';
 abstract class WebViewPlatformCallbacksHandler {
   /// Invoked by [WebViewPlatformController] when a JavaScript channel message is received.
   void onJavaScriptChannelMessage(String channel, String message);
+
   /// Invoked by [WebViewPlatformController] when a navigation request is pending.
   ///
   /// If true is returned the navigation is allowed, otherwise it is blocked.
   bool onNavigationRequest({String url, bool isForMainFrame});
+
   /// Invoked by [WebViewPlatformController] when a page has finished loading.
   void onPageFinished(String url);
 }
+
 /// Interface for talking to the webview's platform implementation.
 ///
 /// An instance implementing this interface is passed to the `onWebViewPlatformCreated` callback that is
 /// passed to [WebViewPlatformBuilder#onWebViewPlatformCreated].
+///
+/// Platform implementations that live in a separate package should extend this class rather than
+/// implement it as webview_flutter does not consider newly added methods to be breaking changes.
+/// Extending this class (using `extends`) ensures that the subclass will get the default
+/// implementation, while platform implementations that `implements` this interface will be broken
+/// by newly added [WebViewPlatformController] methods.
 abstract class WebViewPlatformController {
   /// Creates a new WebViewPlatform.
   ///
@@ -35,6 +44,7 @@ abstract class WebViewPlatformController {
   ///
   /// The `handler` parameter must not be null.
   WebViewPlatformController(WebViewPlatformCallbacksHandler handler);
+
   /// Loads the specified URL.
   ///
   /// If `headers` is not null and the URL is an HTTP URL, the key value paris in `headers` will
@@ -67,16 +77,19 @@ abstract class WebViewPlatformController {
     throw UnimplementedError(
         "WebView currentUrl is not implemented on the current platform");
   }
+
   /// Checks whether there's a back history item.
   Future<bool> canGoBack() {
     throw UnimplementedError(
         "WebView canGoBack is not implemented on the current platform");
   }
+
   /// Checks whether there's a forward history item.
   Future<bool> canGoForward() {
     throw UnimplementedError(
         "WebView canGoForward is not implemented on the current platform");
   }
+
   /// Goes back in the history of this WebView.
   ///
   /// If there is no back history item this is a no-op.
@@ -84,6 +97,7 @@ abstract class WebViewPlatformController {
     throw UnimplementedError(
         "WebView goBack is not implemented on the current platform");
   }
+
   /// Goes forward in the history of this WebView.
   ///
   /// If there is no forward history item this is a no-op.
@@ -91,11 +105,13 @@ abstract class WebViewPlatformController {
     throw UnimplementedError(
         "WebView goForward is not implemented on the current platform");
   }
+
   /// Reloads the current URL.
   Future<void> reload() {
     throw UnimplementedError(
         "WebView reload is not implemented on the current platform");
   }
+
   /// Clears all caches used by the [WebView].
   ///
   /// The following caches are cleared:
@@ -108,6 +124,7 @@ abstract class WebViewPlatformController {
     throw UnimplementedError(
         "WebView clearCache is not implemented on the current platform");
   }
+
   /// Evaluates a JavaScript expression in the context of the current page.
   ///
   /// The Future completes with an error if a JavaScript error occurred, or if the type of the
@@ -116,6 +133,7 @@ abstract class WebViewPlatformController {
     throw UnimplementedError(
         "WebView evaluateJavascript is not implemented on the current platform");
   }
+
   /// Adds new JavaScript channels to the set of enabled channels.
   ///
   /// For each value in this list the platform's webview should make sure that a corresponding
@@ -142,16 +160,66 @@ abstract class WebViewPlatformController {
   }
 }
 
+/// A single setting for configuring a WebViewPlatform which may be absent.
+class WebSetting<T> {
+  /// Constructs an absent setting instance.
+  ///
+  /// The [isPresent] field for the instance will be false.
+  ///
+  /// Accessing [value] for an absent instance will throw.
+  WebSetting.absent()
+      : _value = null,
+        isPresent = false;
+
+  /// Constructs a setting of the given `value`.
+  ///
+  /// The [isPresent] field for the instance will be true.
+  WebSetting.of(T value)
+      : _value = value,
+        isPresent = true;
+
+  final T _value;
+
+  /// The setting's value.
+  ///
+  /// Throws if [WebSetting.isPresent] is false.
+  T get value {
+    if (!isPresent) {
+      throw StateError('Cannot access a value of an absent WebSetting');
+    }
+    assert(isPresent);
+    return _value;
+  }
+
+  /// True when this web setting instance contains a value.
+  ///
+  /// When false the [WebSetting.value] getter throws.
+  final bool isPresent;
+
+  @override
+  bool operator ==(Object other) {
+    if (other.runtimeType != runtimeType) return false;
+    final WebSetting<T> typedOther = other;
+    return typedOther.isPresent == isPresent && typedOther._value == _value;
+  }
+
+  @override
+  int get hashCode => hashValues(_value, isPresent);
+}
+
 /// Settings for configuring a WebViewPlatform.
 ///
 /// Initial settings are passed as part of [CreationParams], settings updates are sent with
 /// [WebViewPlatform#updateSettings].
+///
+/// The `userAgent` parameter must not be null.
 class WebSettings {
   WebSettings({
     this.javascriptMode,
     this.hasNavigationDelegate,
     this.debuggingEnabled,
-  });
+    @required this.userAgent,
+  }) : assert(userAgent != null);
 
   /// The JavaScript execution mode to be used by the webview.
   final JavascriptMode javascriptMode;
@@ -164,9 +232,19 @@ class WebSettings {
   /// See also: [WebView.debuggingEnabled].
   final bool debuggingEnabled;
 
+  /// The value used for the HTTP `User-Agent:` request header.
+  ///
+  /// If [userAgent.value] is null the platform's default user agent should be used.
+  ///
+  /// An absent value ([userAgent.isPresent] is false) represents no change to this setting from the
+  /// last time it was set.
+  ///
+  /// See also [WebView.userAgent].
+  final WebSetting<String> userAgent;
+
   @override
   String toString() {
-    return 'WebSettings(javascriptMode: $javascriptMode, hasNavigationDelegate: $hasNavigationDelegate, debuggingEnabled: $debuggingEnabled)';
+    return 'WebSettings(javascriptMode: $javascriptMode, hasNavigationDelegate: $hasNavigationDelegate, debuggingEnabled: $debuggingEnabled, userAgent: $userAgent,)';
   }
 }
 
@@ -178,6 +256,7 @@ class CreationParams {
     this.initialUrl,
     this.webSettings,
     this.javascriptChannelNames,
+    this.userAgent,
     this.autoMediaPlaybackPolicy =
         AutoMediaPlaybackPolicy.require_user_action_for_all_media_types,
   }) : assert(autoMediaPlaybackPolicy != null);
@@ -205,11 +284,17 @@ class CreationParams {
   // to PlatformWebView.
   final Set<String> javascriptChannelNames;
 
+  /// The value used for the HTTP User-Agent: request header.
+  ///
+  /// When null the platform's webview default is used for the User-Agent header.
+  final String userAgent;
+
   /// Which restrictions apply on automatic media playback.
   final AutoMediaPlaybackPolicy autoMediaPlaybackPolicy;
+
   @override
   String toString() {
-    return '$runtimeType(initialUrl: $initialUrl, settings: $webSettings, javascriptChannelNames: $javascriptChannelNames)';
+    return '$runtimeType(initialUrl: $initialUrl, settings: $webSettings, javascriptChannelNames: $javascriptChannelNames, UserAgent: $userAgent)';
   }
 }
 
@@ -253,6 +338,7 @@ abstract class WebViewPlatform {
     WebViewPlatformCreatedCallback onWebViewPlatformCreated,
     Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers,
   });
+
   /// Clears all cookies for all [WebView] instances.
   ///
   /// Returns true if cookies were present before clearing, else false.

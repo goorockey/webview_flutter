@@ -136,6 +136,7 @@ void main() {
     await controller.evaluateJavascript('Echo.postMessage("hello");');
     expect(messagesReceived, equals(<String>['hello']));
   });
+
   test('resize webview', () async {
     final String resizeTest = '''
         <!DOCTYPE html><html>
@@ -160,6 +161,7 @@ void main() {
     final Completer<WebViewController> controllerCompleter =
         Completer<WebViewController>();
     final GlobalKey key = GlobalKey();
+
     final WebView webView = WebView(
       key: key,
       initialUrl: 'data:text/html;charset=utf-8;base64,$resizeTestBase64',
@@ -181,6 +183,7 @@ void main() {
       },
       javascriptMode: JavascriptMode.unrestricted,
     );
+
     await pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
@@ -195,9 +198,12 @@ void main() {
         ),
       ),
     );
+
     await controllerCompleter.future;
     await pageLoaded.future;
+
     expect(resizeCompleter.isCompleted, false);
+
     await pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
@@ -212,8 +218,98 @@ void main() {
         ),
       ),
     );
+
     await resizeCompleter.future;
   });
+
+  test('set custom userAgent', () async {
+    final Completer<WebViewController> controllerCompleter1 =
+        Completer<WebViewController>();
+    final GlobalKey _globalKey = GlobalKey();
+    await pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: WebView(
+          key: _globalKey,
+          initialUrl: 'https://flutter.dev/',
+          javascriptMode: JavascriptMode.unrestricted,
+          userAgent: 'Custom_User_Agent1',
+          onWebViewCreated: (WebViewController controller) {
+            controllerCompleter1.complete(controller);
+          },
+        ),
+      ),
+    );
+    final WebViewController controller1 = await controllerCompleter1.future;
+    final String customUserAgent1 = await _getUserAgent(controller1);
+    expect(customUserAgent1, 'Custom_User_Agent1');
+    // rebuild the WebView with a different user agent.
+    await pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: WebView(
+          key: _globalKey,
+          initialUrl: 'https://flutter.dev/',
+          javascriptMode: JavascriptMode.unrestricted,
+          userAgent: 'Custom_User_Agent2',
+        ),
+      ),
+    );
+
+    final String customUserAgent2 = await _getUserAgent(controller1);
+    expect(customUserAgent2, 'Custom_User_Agent2');
+  });
+
+  test('use default platform userAgent after webView is rebuilt', () async {
+    final Completer<WebViewController> controllerCompleter =
+        Completer<WebViewController>();
+    final GlobalKey _globalKey = GlobalKey();
+    // Build the webView with no user agent to get the default platform user agent.
+    await pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: WebView(
+          key: _globalKey,
+          initialUrl: 'https://flutter.dev/',
+          javascriptMode: JavascriptMode.unrestricted,
+          onWebViewCreated: (WebViewController controller) {
+            controllerCompleter.complete(controller);
+          },
+        ),
+      ),
+    );
+    final WebViewController controller = await controllerCompleter.future;
+    final String defaultPlatformUserAgent = await _getUserAgent(controller);
+    // rebuild the WebView with a custom user agent.
+    await pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: WebView(
+          key: _globalKey,
+          initialUrl: 'https://flutter.dev/',
+          javascriptMode: JavascriptMode.unrestricted,
+          userAgent: 'Custom_User_Agent',
+        ),
+      ),
+    );
+    final String customUserAgent = await _getUserAgent(controller);
+    expect(customUserAgent, 'Custom_User_Agent');
+    // rebuilds the WebView with no user agent.
+    await pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: WebView(
+          key: _globalKey,
+          initialUrl: 'https://flutter.dev/',
+          javascriptMode: JavascriptMode.unrestricted,
+        ),
+      ),
+    );
+
+    final String customUserAgent2 = await _getUserAgent(controller);
+    expect(customUserAgent2, defaultPlatformUserAgent);
+  });
+
   group('Media playback policy', () {
     String audioTestBase64;
     setUpAll(() async {
@@ -244,10 +340,12 @@ void main() {
       ''';
       audioTestBase64 = base64Encode(const Utf8Encoder().convert(audioTest));
     });
+
     test('Auto media playback', () async {
       Completer<WebViewController> controllerCompleter =
           Completer<WebViewController>();
       Completer<void> pageLoaded = Completer<void>();
+
       await pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
@@ -267,10 +365,13 @@ void main() {
       );
       WebViewController controller = await controllerCompleter.future;
       await pageLoaded.future;
+
       String isPaused = await controller.evaluateJavascript('isPaused();');
       expect(isPaused, _webviewBool(false));
+
       controllerCompleter = Completer<WebViewController>();
       pageLoaded = Completer<void>();
+
       // We change the key to re-create a new webview as we change the initialMediaPlaybackPolicy
       await pumpWidget(
         Directionality(
@@ -290,15 +391,19 @@ void main() {
           ),
         ),
       );
+
       controller = await controllerCompleter.future;
       await pageLoaded.future;
+
       isPaused = await controller.evaluateJavascript('isPaused();');
       expect(isPaused, _webviewBool(true));
     });
+
     test('Changes to initialMediaPlaybackPolocy are ignored', () async {
       final Completer<WebViewController> controllerCompleter =
           Completer<WebViewController>();
       Completer<void> pageLoaded = Completer<void>();
+
       final GlobalKey key = GlobalKey();
       await pumpWidget(
         Directionality(
@@ -319,9 +424,12 @@ void main() {
       );
       final WebViewController controller = await controllerCompleter.future;
       await pageLoaded.future;
+
       String isPaused = await controller.evaluateJavascript('isPaused();');
       expect(isPaused, _webviewBool(false));
+
       pageLoaded = Completer<void>();
+
       await pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
@@ -340,8 +448,11 @@ void main() {
           ),
         ),
       );
+
       await controller.reload();
+
       await pageLoaded.future;
+
       isPaused = await controller.evaluateJavascript('isPaused();');
       expect(isPaused, _webviewBool(false));
     });
@@ -352,6 +463,7 @@ Future<void> pumpWidget(Widget widget) {
   runApp(widget);
   return WidgetsBinding.instance.endOfFrame;
 }
+
 // JavaScript booleans evaluate to different string values on Android and iOS.
 // This utility method returns the string boolean value of the current platform.
 String _webviewBool(bool value) {
@@ -359,4 +471,13 @@ String _webviewBool(bool value) {
     return value ? '1' : '0';
   }
   return value ? 'true' : 'false';
+}
+
+/// Returns the value used for the HTTP User-Agent: request header in subsequent HTTP requests.
+Future<String> _getUserAgent(WebViewController controller) async {
+  if (defaultTargetPlatform == TargetPlatform.iOS) {
+    return await controller.evaluateJavascript('navigator.userAgent;');
+  }
+  return jsonDecode(
+      await controller.evaluateJavascript('navigator.userAgent;'));
 }
