@@ -12,6 +12,8 @@ import android.os.Handler;
 import android.view.View;
 import android.webkit.WebStorage;
 import android.webkit.WebViewClient;
+import android.view.ViewParent;
+import android.view.ViewGroup;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -239,7 +241,7 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
           final WebViewClient webViewClient =
               flutterWebViewClient.createWebViewClient(hasNavigationDelegate);
 
-        StatHybridHandler.initWebSettings(webView.getSettings());
+          StatHybridHandler.initWebSettings(webView.getSettings());
           webView.setWebViewClient(webViewClient);
           break;
         case "debuggingEnabled":
@@ -290,7 +292,20 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
   @Override
   public void dispose() {
     methodChannel.setMethodCallHandler(null);
-    webView.dispose();
-    webView.destroy();
+    if (webView != null) {
+      ViewParent parent = webView.getParent();
+      if (parent != null) {
+          ((ViewGroup) parent).removeView(webView);
+      }
+
+      webView.stopLoading();
+      webView.getSettings().setJavaScriptEnabled(false);
+      webView.clearHistory();
+      webView.clearView();
+      webView.removeAllViews();
+
+      webView.dispose();
+      webView.destroy();
+    }
   }
 }
