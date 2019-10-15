@@ -12,6 +12,8 @@ import android.os.Handler;
 import android.view.View;
 import android.webkit.WebStorage;
 import android.webkit.WebViewClient;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.view.ViewParent;
 import android.view.ViewGroup;
 import io.flutter.plugin.common.BinaryMessenger;
@@ -39,7 +41,7 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
       BinaryMessenger messenger,
       int id,
       Map<String, Object> params,
-      final View containerView) {
+      @Nullable View containerView) {
 
     DisplayListenerProxy displayListenerProxy = new DisplayListenerProxy();
     DisplayManager displayManager =
@@ -96,6 +98,16 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
   // TODO(mklim): Add the @Override annotation once flutter/engine#9727 rolls to stable.
   public void onInputConnectionLocked() {
     webView.lockInputConnection();
+  }
+
+  @Override
+  public void onFlutterViewAttached(@NonNull View flutterView) {
+    webView.setContainerView(flutterView);
+  }
+
+  @Override
+  public void onFlutterViewDetached() {
+    webView.setContainerView(null);
   }
 
   @Override

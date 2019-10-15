@@ -1,3 +1,21 @@
+## 0.3.15
+
+* Add support for the v2 Android embedding. This shouldn't affect existing
+  functionality. Plugin authors who use the V2 embedding can now register the
+  plugin and expect that it correctly responds to app lifecycle changes.
+
+## 0.3.14+2
+
+* Define clang module for iOS.
+
+## 0.3.14+1
+
+* Allow underscores anywhere for Javascript Channel name.
+
+## 0.3.14
+
+* Added a getTitle getter to WebViewController.
+
 ## 0.3.13
 
 * Add an optional `userAgent` property to set a custom User Agent.
@@ -29,39 +47,63 @@
   all Android versions prior to P.
 
 ## 0.3.11+2
+
 * Add fix for input connection being dropped after a screen resize on certain
   Android devices.
+
 ## 0.3.11+1
+
 * Work around a bug in old Android WebView versions that was causing a crash
   when resizing the webview on old devices.
+
 ## 0.3.11
+
 * Add an initialAutoMediaPlaybackPolicy setting for controlling how auto media
   playback is restricted.
+
 ## 0.3.10+5
+
 * Add dependency on `androidx.annotation:annotation:1.0.0`.
+
 ## 0.3.10+4
+
 * Add keyboard text to README.
+
 ## 0.3.10+3
+
 * Don't log an unknown setting key error for 'debuggingEnabled' on iOS.
+
 ## 0.3.10+2
+
 * Fix InputConnection being lost when combined with route transitions.
+
 ## 0.3.10+1
+
 * Add support for simultaenous Flutter `TextInput` and WebView text fields.
+
 ## 0.3.10
+
 * Add partial WebView keyboard support for Android versions prior to N. Support
   for UIs that also have Flutter `TextInput` fields is still pending. This basic
   support currently only works with Flutter `master`. The keyboard will still
   appear when it previously did not when run with older versions of Flutter. But
   if the WebView is resized while showing the keyboard the text field will need
   to be focused multiple times for any input to be registered.
+
 ## 0.3.9+2
+
 * Update Dart code to conform to current Dart formatter.
+
 ## 0.3.9+1
+
 * Add missing template type parameter to `invokeMethod` calls.
 * Bump minimum Flutter version to 1.5.0.
 * Replace invokeMethod with invokeMapMethod wherever necessary.
+
 ## 0.3.9
+
 * Allow external packages to provide webview implementations for new platforms.
+
 ## 0.3.8+1
 
 * Suppress deprecation warning for BinaryMessages. See: https://github.com/flutter/flutter/issues/33446
