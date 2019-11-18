@@ -110,7 +110,7 @@ class FlutterWebViewClient {
 
   private WebViewClient internalCreateWebViewClient() {
     return new WebViewClient() {
-      @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+      @TargetApi(Build.VERSION_CODES.N)
       @Override
       public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
         return FlutterWebViewClient.this.shouldOverrideUrlLoading(view, request);
@@ -133,8 +133,7 @@ class FlutterWebViewClient {
   private WebViewClientCompat internalCreateWebViewClientCompat() {
     return new WebViewClientCompat() {
       @Override
-      public boolean shouldOverrideUrlLoading(
-          @NonNull WebView view, @NonNull WebResourceRequest request) {
+      public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
         return FlutterWebViewClient.this.shouldOverrideUrlLoading(view, request);
       }
 
